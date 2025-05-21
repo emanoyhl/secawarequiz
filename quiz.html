@@ -1,0 +1,239 @@
+<!--
+Apache License
+Version 2.0, January 2004
+http://www.apache.org/licenses/
+
+Copyright 2025 emanoyhl and emanoyhl.net find me at github.com/emanoyhl 
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Awareness Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            text-align: center;
+        }
+        .quiz-container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .question {
+            margin: 20px 0;
+        }
+        .options {
+            list-style-type: none;
+            padding: 0;
+        }
+        .options li {
+            margin: 10px 0;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #5cb85c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #4cae4c;
+        }
+        .result {
+            display: none;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <h1>Security Awareness Quiz</h1>
+    <div id="quiz"></div>
+    <button id="next-button" style="display: none;">Next</button>
+    <button id="retake-button" style="display: none;">Retake Quiz</button>
+    <div class="result" id="result"></div>
+</div>
+
+<script>
+    const questions = [
+        {
+            question: "What is the best way to create a strong password?",
+            options: [
+                "Use a combination of letters, numbers, and symbols",
+                "Use your name and birthdate",
+                "Use the same password for all accounts"
+            ],
+            answer: 0
+        },
+        {
+            question: "What should you do if you receive an email from an unknown sender?",
+            options: [
+                "Delete the email without opening it",
+                "Open the email and click on all links",
+                "Reply to the email to ask for more information"
+            ],
+            answer: 0
+        },
+        {
+            question: "Why is it important to update your software regularly?",
+            options: [
+                "To fix security vulnerabilities and bugs",
+                "To make your device look new",
+                "It is not important"
+            ],
+            answer: 0
+        },
+        {
+            question: "What is phishing?",
+            options: [
+                "A method to catch fish",
+                "A fraudulent attempt to obtain sensitive information",
+                "A type of computer virus"
+            ],
+            answer: 1
+        },
+        {
+            question: "What should you do if you suspect your account has been compromised?",
+            options: [
+                "Change your password immediately",
+                "Ignore it",
+                "Assume it's not a big deal"
+            ],
+            answer: 0
+        }
+    ];
+
+    // Function to shuffle an array
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    // Shuffle questions initially
+    shuffleArray(questions);
+
+    // Function to shuffle options
+    function shuffleOptions(question) {
+        const options = [...question.options];
+        const correctAnswer = question.answer;
+
+        // Shuffle options
+        for (let i = options.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [options[i], options[j]] = [options[j], options[i]];
+        }
+
+        // Determine new index of the correct answer
+        const newCorrectAnswerIndex = options.indexOf(question.options[correctAnswer]);
+
+        return {
+            options,
+            correctAnswer: newCorrectAnswerIndex // Return the new index of the correct answer
+        };
+    }
+
+    let currentQuestion = 0;
+    let score = 0;
+    let correctAnswerIndex = -1; // Initialize to -1
+
+    function loadQuestion() {
+        const quizContainer = document.getElementById("quiz");
+        const question = questions[currentQuestion];
+        const { options, correctAnswer } = shuffleOptions(question); // Shuffle options and get correct answer index
+
+        // Log the correct answer index for debugging
+        console.log(`Correct Answer Index for Question ${currentQuestion + 1}: ${correctAnswer}`);
+
+        quizContainer.innerHTML = `
+            <div class="question">
+                <h2>${question.question}</h2>
+                <ul class="options">
+                    ${options.map((option, index) => `<li>
+                        <label>
+                            <input type="radio" name="option" value="${index}">
+                            ${option}
+                        </label>
+                    </li>`).join('')}
+                </ul>
+            </div>
+        `;
+
+        correctAnswerIndex = correctAnswer; // Set the global correctAnswerIndex to the current question's correct answer index
+        return correctAnswer; // Return the updated correct answer index
+    }
+
+    function showResult() {
+        const resultContainer = document.getElementById("result");
+        resultContainer.innerHTML = `<br />You scored ${score} out of ${questions.length}!`;
+        resultContainer.style.display = "block";
+        document.getElementById("next-button").style.display = "none";
+        document.getElementById("retake-button").style.display = "inline-block"; // Show retake button
+    }
+
+    // Function to reset the quiz
+    function resetQuiz() {
+        currentQuestion = 0;
+        score = 0;
+        document.getElementById("result").style.display = "none";
+        document.getElementById("retake-button").style.display = "none"; // Hide retake button
+        shuffleArray(questions); // Shuffle questions for the new quiz
+        loadQuestion();
+        document.getElementById("next-button").style.display = "inline-block"; // Show next button
+    }
+
+    document.getElementById("next-button").addEventListener("click", () => {
+        const selectedOption = document.querySelector('input[name="option"]:checked');
+        if (selectedOption) {
+            const answerIndex = parseInt(selectedOption.value);
+            if (answerIndex === correctAnswerIndex) { // Check against the updated answer index
+                score++;
+            }
+            currentQuestion++;
+            if (currentQuestion < questions.length) {
+                correctAnswerIndex = loadQuestion(); // Load next question and update correct answer index
+            } else {
+                showResult();
+            }
+        } else {
+            alert("Please select an answer.");
+        }
+    });
+
+    // Event listener for retake button
+    document.getElementById("retake-button").addEventListener("click", resetQuiz);
+
+    correctAnswerIndex = loadQuestion(); // Initialize the first question
+    document.getElementById("next-button").style.display = "inline-block";
+</script>
+
+</body>
+</html>

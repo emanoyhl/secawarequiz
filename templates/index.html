@@ -1,0 +1,136 @@
+<!--
+Apache License
+Version 2.0, January 2004
+http://www.apache.org/licenses/
+
+Copyright 2025 emanoyhl and emanoyhl.net find me at github.com/emanoyhl 
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Awareness Quiz</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f4; }
+        h1 { text-align: center; }
+        .quiz-container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .question { margin: 20px 0; }
+        .options { list-style-type: none; padding: 0; }
+        .options li { margin: 10px 0; }
+        button { display: block; width: 100%; padding: 10px; background-color: #5cb85c; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background-color: #4cae4c; }
+        .result { display: none; text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <h1>Security Awareness Quiz</h1>
+    <div id="quiz"></div>
+    <button id="next-button" style="display: none;">Next</button>
+    <button id="retake-button" style="display: none;">Retake Quiz</button>
+    <div class="result" id="result"></div>
+</div>
+
+<script>
+    let questions = [];
+    let currentQuestionIndex = 0;
+    let score = 0;
+
+    // Fetch questions from the server
+    fetch('/api/questions')
+        .then(response => response.json())
+        .then(data => {
+            // Shuffle questions
+            questions = shuffleArray(data);
+            loadQuestion(currentQuestionIndex); // Load the first question
+        });
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    function loadQuestion(index) {
+        const quizContainer = document.getElementById("quiz");
+        const question = questions[index];
+
+        // Shuffle options
+        const options = shuffleArray([...question.options]);
+        const correctAnswerIndex = options.indexOf(question.options[question.answer]);
+
+        quizContainer.innerHTML = `
+            <div class="question">
+                <h2>${question.question}</h2>
+                <ul class="options">
+                    ${options.map((option, i) => `<li>
+                        <label>
+                            <input type="radio" name="option" value="${i}">
+                            ${option}
+                        </label>
+                    </li>`).join('')}
+                </ul>
+            </div>
+        `;
+        document.getElementById("next-button").style.display = "inline-block"; // Show the Next button
+        document.getElementById("retake-button").style.display = "none"; // Hide the Retake Quiz button
+
+        // Store the correct answer index for this question
+        quizContainer.dataset.correctAnswerIndex = correctAnswerIndex; 
+    }
+
+    document.getElementById("next-button").addEventListener("click", () => {
+        const selected = document.querySelector(`input[name="option"]:checked`);
+        if (selected) {
+            const answerIndex = parseInt(selected.value);
+            const correctAnswerIndex = parseInt(document.getElementById("quiz").dataset.correctAnswerIndex);
+
+            // Check if the answer is correct
+            if (answerIndex === correctAnswerIndex) {
+                score++;
+            }
+
+            currentQuestionIndex++;
+            if (currentQuestionIndex < questions.length) {
+                loadQuestion(currentQuestionIndex); // Load the next question
+            } else {
+                // Show results
+                document.getElementById("result").innerHTML = `<br />You scored ${score} out of ${questions.length}!`;
+                document.getElementById("result").style.display = "block";
+                document.getElementById("next-button").style.display = "none"; // Hide the Next button
+                document.getElementById("retake-button").style.display = "inline-block"; // Show the Retake Quiz button
+            }
+        } else {
+            alert("Please select an answer.");
+        }
+    });
+
+    // Retake Quiz logic
+    document.getElementById("retake-button").addEventListener("click", () => {
+        currentQuestionIndex = 0;
+        score = 0;
+        document.getElementById("result").style.display = "none";
+        document.getElementById("next-button").style.display = "inline-block"; // Show the Next button
+        loadQuestion(currentQuestionIndex); // Load the first question again
+    });
+</script>
+
+</body>
+</html>
